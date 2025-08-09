@@ -33,7 +33,7 @@ Fitur yang akan dikembangkan:
 
 - [x] Mengambil gambar dari galeri
 - [x] Pilih titik warna secara manual dari gambar
-- [ ] Mengambil gambar dari kamera
+- [x] Mengambil gambar dari kamera
 - [ ] Mode AR: deteksi warna langsung dari kamera (real-time)
 
 ## Lisensi
