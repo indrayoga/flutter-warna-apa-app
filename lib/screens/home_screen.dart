@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _isMenuOpen = false;
   // Services
   final ImagePicker _picker = ImagePicker();
   final ColorService _colorService = ColorService();
@@ -49,26 +50,34 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _pickImageFromGallery() async {
     // tampilkan indikator loading, karena proses ini bisa memakan waktu
     setState(() => isLoading = true);
-
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    await _processPickedImage(pickedFile);
+  }
 
+  Future<void> _pickImageFromCamera() async {
+    setState(() => isLoading = true);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    await _processPickedImage(pickedFile);
+  }
+
+  Future<void> _processPickedImage(XFile? pickedFile) async {
     if (pickedFile != null) {
       final imageFile = File(pickedFile.path);
       final bytes = await imageFile.readAsBytes();
       final decoded = img.decodeImage(bytes);
       final dominantColor = await _imageService.getDominantColor(imageFile);
-
       setState(() {
         _imageFile = imageFile;
         _decodedImage = decoded;
         _dominantColor = dominantColor;
         _tappedColor = null; // Reset tapped color
-        if (dominantColor != null) {
-          _warna = _colorService.cariNamaWarnaTerdekat(dominantColor);
-        }
+        _warna = dominantColor != null
+            ? _colorService.cariNamaWarnaTerdekat(dominantColor)
+            : null;
         isLoading = false;
       });
     } else {
+      // User canceled the picker
       setState(() => isLoading = false);
     }
   }
@@ -143,9 +152,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickImageFromGallery,
-        child: Icon(Icons.color_lens),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isMenuOpen)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: FloatingActionButton(
+                onPressed: _pickImageFromGallery,
+                heroTag: 'galeri',
+                child: Icon(Icons.photo),
+              ),
+            ),
+          if (_isMenuOpen)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: FloatingActionButton(
+                onPressed: _pickImageFromCamera,
+                heroTag: 'Kamera',
+                child: Icon(Icons.camera),
+              ),
+            ),
+          FloatingActionButton(
+            heroTag: 'main',
+            child: Icon(Icons.add),
+            onPressed: () {
+              setState(() {
+                _isMenuOpen = !_isMenuOpen;
+              });
+            },
+          ),
+        ],
       ),
     );
   }
